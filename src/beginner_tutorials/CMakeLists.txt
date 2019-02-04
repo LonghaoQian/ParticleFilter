@@ -210,3 +210,7 @@ add_dependencies(listener beginner_tutorials_generate_messages_cpp)
 add_executable(VRPN_listener src/VRPN_listener.cpp)
 target_link_libraries(VRPN_listener ${catkin_LIBRARIES})
 add_dependencies(VRPN_listener beginner_tutorials_generate_messages_cpp)
+
+add_executable(ARdrone_cmdv1 src/ARdrone_cmdv1.cpp)
+target_link_libraries(ARdrone_cmdv1 ${catkin_LIBRARIES})
+add_dependencies(ARdrone_cmdv1 beginner_tutorials_generate_messages_cpp)

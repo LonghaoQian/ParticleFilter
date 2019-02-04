@@ -168,8 +168,24 @@ int main(int argc, char **argv)
    * will exit when Ctrl-C is pressed, or the node is shutdown by the master.
    */
 // %Tag(SPIN)%
-  ros::spin();
+  //ros::spin();
 // %EndTag(SPIN)%
+// try using while loop
+
+  ros::Rate loop_rate(10);
+  while (ros::ok())
+  {
+
+// %Tag(SPINONCE)%
+    ros::spinOnce();
+// %EndTag(SPINONCE)%
+
+// %Tag(RATE_SLEEP)%
+    loop_rate.sleep();
+// %EndTag(RATE_SLEEP)%
+    //++count;
+  }
+
 
   return 0;
 }

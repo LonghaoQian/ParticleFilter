@@ -1,2 +1,2 @@
-beginner_tutorials
+ardrone_autonomy:beginner_tutorials
 -DCATKIN_DEVEL_PREFIX=/home/longhao/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/longhao/catkin_ws/install -G Unix Makefiles

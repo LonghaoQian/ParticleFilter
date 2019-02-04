@@ -166,6 +166,21 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/rule:
+	cd /home/longhao/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/rule
+.PHONY : beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/rule
+
+# Convenience name for target.
+ARdrone_cmdv1: beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/rule
+
+.PHONY : ARdrone_cmdv1
+
+# fast build rule for target.
+ARdrone_cmdv1/fast:
+	cd /home/longhao/catkin_ws/build && $(MAKE) -f beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/build.make beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/build
+.PHONY : ARdrone_cmdv1/fast
+
+# Convenience name for target.
 beginner_tutorials/CMakeFiles/VRPN_listener.dir/rule:
 	cd /home/longhao/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 beginner_tutorials/CMakeFiles/VRPN_listener.dir/rule
 .PHONY : beginner_tutorials/CMakeFiles/VRPN_listener.dir/rule
@@ -705,6 +720,33 @@ _beginner_tutorials_generate_messages_check_deps_Num/fast:
 	cd /home/longhao/catkin_ws/build && $(MAKE) -f beginner_tutorials/CMakeFiles/_beginner_tutorials_generate_messages_check_deps_Num.dir/build.make beginner_tutorials/CMakeFiles/_beginner_tutorials_generate_messages_check_deps_Num.dir/build
 .PHONY : _beginner_tutorials_generate_messages_check_deps_Num/fast
 
+src/ARdrone_cmdv1.o: src/ARdrone_cmdv1.cpp.o
+
+.PHONY : src/ARdrone_cmdv1.o
+
+# target to build an object file
+src/ARdrone_cmdv1.cpp.o:
+	cd /home/longhao/catkin_ws/build && $(MAKE) -f beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/build.make beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/src/ARdrone_cmdv1.cpp.o
+.PHONY : src/ARdrone_cmdv1.cpp.o
+
+src/ARdrone_cmdv1.i: src/ARdrone_cmdv1.cpp.i
+
+.PHONY : src/ARdrone_cmdv1.i
+
+# target to preprocess a source file
+src/ARdrone_cmdv1.cpp.i:
+	cd /home/longhao/catkin_ws/build && $(MAKE) -f beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/build.make beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/src/ARdrone_cmdv1.cpp.i
+.PHONY : src/ARdrone_cmdv1.cpp.i
+
+src/ARdrone_cmdv1.s: src/ARdrone_cmdv1.cpp.s
+
+.PHONY : src/ARdrone_cmdv1.s
+
+# target to generate assembly for a file
+src/ARdrone_cmdv1.cpp.s:
+	cd /home/longhao/catkin_ws/build && $(MAKE) -f beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/build.make beginner_tutorials/CMakeFiles/ARdrone_cmdv1.dir/src/ARdrone_cmdv1.cpp.s
+.PHONY : src/ARdrone_cmdv1.cpp.s
+
 src/VRPN_listener.o: src/VRPN_listener.cpp.o
 
 .PHONY : src/VRPN_listener.o
@@ -796,6 +838,7 @@ help:
 	@echo "... install"
 	@echo "... install/local"
 	@echo "... install/strip"
+	@echo "... ARdrone_cmdv1"
 	@echo "... edit_cache"
 	@echo "... VRPN_listener"
 	@echo "... listener"
@@ -835,6 +878,9 @@ help:
 	@echo "... test"
 	@echo "... beginner_tutorials_geneus"
 	@echo "... _beginner_tutorials_generate_messages_check_deps_Num"
+	@echo "... src/ARdrone_cmdv1.o"
+	@echo "... src/ARdrone_cmdv1.i"
+	@echo "... src/ARdrone_cmdv1.s"
 	@echo "... src/VRPN_listener.o"
 	@echo "... src/VRPN_listener.i"
 	@echo "... src/VRPN_listener.s"
