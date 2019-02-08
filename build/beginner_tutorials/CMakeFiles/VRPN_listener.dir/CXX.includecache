@@ -13,6 +13,8 @@ std_msgs/String.h
 /home/longhao/catkin_ws/src/beginner_tutorials/src/std_msgs/String.h
 geometry_msgs/PoseStamped.h
 /home/longhao/catkin_ws/src/beginner_tutorials/src/geometry_msgs/PoseStamped.h
+termios.h
+-
 
 /opt/ros/kinetic/include/geometry_msgs/Point.h
 string

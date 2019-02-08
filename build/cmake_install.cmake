@@ -117,6 +117,7 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/longhao/catkin_ws/build/gtest/cmake_install.cmake")
+  include("/home/longhao/catkin_ws/build/keyboard_reader/cmake_install.cmake")
   include("/home/longhao/catkin_ws/build/beginner_tutorials/cmake_install.cmake")
   include("/home/longhao/catkin_ws/build/ardrone_autonomy/cmake_install.cmake")
 

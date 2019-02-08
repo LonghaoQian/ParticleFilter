@@ -35,6 +35,8 @@ geometry_msgs/Twist.h
 /home/longhao/catkin_ws/src/beginner_tutorials/src/geometry_msgs/Twist.h
 ardrone_autonomy/Navdata.h
 /home/longhao/catkin_ws/src/beginner_tutorials/src/ardrone_autonomy/Navdata.h
+termios.h
+-
 sstream
 -
 

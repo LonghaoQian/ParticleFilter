@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
-
+#include <termios.h>
 
 /*
  *
@@ -28,6 +28,7 @@ struct posebuffer{
     double q3;
     double t;
 };
+
 
 velocitybuffer velocity[4];
 posebuffer pose_last;
@@ -175,7 +176,6 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(10);
   while (ros::ok())
   {
-
 // %Tag(SPINONCE)%
     ros::spinOnce();
 // %EndTag(SPINONCE)%

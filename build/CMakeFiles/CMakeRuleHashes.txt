@@ -37,6 +37,7 @@ b00e287c11ef66e542b5c741eb6087e1 /home/longhao/catkin_ws/devel/include/ardrone_a
 9f6e6e049befa312aa9754bca11c8284 /home/longhao/catkin_ws/devel/include/ardrone_autonomy/vector31.h
 354668493800e11d2bd21e97aaf35257 /home/longhao/catkin_ws/devel/include/beginner_tutorials/AddTwoInts.h
 bb1881d3a8b39d214e0a827d53ae10cd /home/longhao/catkin_ws/devel/include/beginner_tutorials/Num.h
+45f12bcc2f965082370cf099215bc92a /home/longhao/catkin_ws/devel/include/keyboard_reader/Key.h
 2c53580ef8a8e35b2a3abc9eff9e3a8b /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/ardrone_autonomy/msg/_Navdata.py
 d0fcda80fda3abb725e240b88085ec15 /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/ardrone_autonomy/msg/__init__.py
 185001bd6c32f58058a250dcdf64de18 /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/ardrone_autonomy/msg/_matrix33.py
@@ -79,6 +80,8 @@ cb8db4bd7ebbaf9e9042cf23dd7b3934 /home/longhao/catkin_ws/devel/lib/python2.7/dis
 6ddc28c3b48c338772506e144bda89f2 /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/beginner_tutorials/msg/__init__.py
 2180c190a63a35dadbe486ed1aea23da /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/beginner_tutorials/srv/_AddTwoInts.py
 8090fa13438269c4afecc9d8df768a8a /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/beginner_tutorials/srv/__init__.py
+3bd52b0657836acd93efd86c462dfb79 /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/keyboard_reader/msg/_Key.py
+ba13ebb1caff7743324954d1ea66746c /home/longhao/catkin_ws/devel/lib/python2.7/dist-packages/keyboard_reader/msg/__init__.py
 701f74dc72ee4b9b30ab6f1464797d8d /home/longhao/catkin_ws/devel/share/common-lisp/ros/ardrone_autonomy/msg/Navdata.lisp
 4ef87e62ac6bb50d52512cc160d6ea51 /home/longhao/catkin_ws/devel/share/common-lisp/ros/ardrone_autonomy/msg/matrix33.lisp
 5d0d09b60aca570de460913bc6c0751b /home/longhao/catkin_ws/devel/share/common-lisp/ros/ardrone_autonomy/msg/navdata_adc_data_frame.lisp
@@ -117,6 +120,7 @@ a19f80d21987250339dbab3dd0c50e4e /home/longhao/catkin_ws/devel/share/common-lisp
 64e54e6e1818ace1c7bc25a72f2a56bb /home/longhao/catkin_ws/devel/share/common-lisp/ros/ardrone_autonomy/srv/RecordEnable.lisp
 519d77f61a7c66d265c9bc5c9f7daf56 /home/longhao/catkin_ws/devel/share/common-lisp/ros/beginner_tutorials/msg/Num.lisp
 5f4454d4cde8386f3339f0c292337e52 /home/longhao/catkin_ws/devel/share/common-lisp/ros/beginner_tutorials/srv/AddTwoInts.lisp
+aa1b620628b49913153e3bc828b9e756 /home/longhao/catkin_ws/devel/share/common-lisp/ros/keyboard_reader/msg/Key.lisp
 3285728c38a580afe0f39568febeebd5 /home/longhao/catkin_ws/devel/share/gennodejs/ros/ardrone_autonomy/msg/Navdata.js
 ca6ae9c2995af5c098d72b41eb6a2fe5 /home/longhao/catkin_ws/devel/share/gennodejs/ros/ardrone_autonomy/msg/matrix33.js
 16b0fe72540172c604050a215e968576 /home/longhao/catkin_ws/devel/share/gennodejs/ros/ardrone_autonomy/msg/navdata_adc_data_frame.js
@@ -155,6 +159,7 @@ dda06622d52b867c2d9cf5113f9aae55 /home/longhao/catkin_ws/devel/share/gennodejs/r
 d3a5035d16b1a1a701235adab152c2a7 /home/longhao/catkin_ws/devel/share/gennodejs/ros/ardrone_autonomy/srv/RecordEnable.js
 26cec7a9d6a19c1e02a3a4413f8cff79 /home/longhao/catkin_ws/devel/share/gennodejs/ros/beginner_tutorials/msg/Num.js
 50d72e717793b4d10c04dab779874428 /home/longhao/catkin_ws/devel/share/gennodejs/ros/beginner_tutorials/srv/AddTwoInts.js
+ce79a56699c5013f16ba91a8e9167a96 /home/longhao/catkin_ws/devel/share/gennodejs/ros/keyboard_reader/msg/Key.js
 24e66a2fd830a7c97c821d7ba40b3c02 /home/longhao/catkin_ws/devel/share/roseus/ros/ardrone_autonomy/manifest.l
 997ea42e3dbca0c6d774f7ff79fce958 /home/longhao/catkin_ws/devel/share/roseus/ros/ardrone_autonomy/msg/Navdata.l
 f4a426b2ad5c7a180999406c9180b830 /home/longhao/catkin_ws/devel/share/roseus/ros/ardrone_autonomy/msg/matrix33.l
@@ -195,6 +200,8 @@ f43d4b0d9920c5c3ba0a6643dc9ade48 /home/longhao/catkin_ws/devel/share/roseus/ros/
 8deeb961758fcf56e1ecf1134c74fba8 /home/longhao/catkin_ws/devel/share/roseus/ros/beginner_tutorials/manifest.l
 9fc564a7fe672234f1a3b339c45bf1f3 /home/longhao/catkin_ws/devel/share/roseus/ros/beginner_tutorials/msg/Num.l
 880bfe55fbdb876263f62c482650d740 /home/longhao/catkin_ws/devel/share/roseus/ros/beginner_tutorials/srv/AddTwoInts.l
+0bd58133701a12fdfe6c33e0e27dd010 /home/longhao/catkin_ws/devel/share/roseus/ros/keyboard_reader/manifest.l
+5d3ad1961e4793f1d26feb84a55fe14e /home/longhao/catkin_ws/devel/share/roseus/ros/keyboard_reader/msg/Key.l
 d8c22e623183aa6e585bfe971dd5eacd /home/longhao/catkin_ws/devel/src/ardronelib-stamp/ardronelib-build
 b907348a2ed45bfd58c9902bd24b019c /home/longhao/catkin_ws/devel/src/ardronelib-stamp/ardronelib-configure
 0b37130d06080ef64fc31393c0af9660 /home/longhao/catkin_ws/devel/src/ardronelib-stamp/ardronelib-download
@@ -253,3 +260,9 @@ c574d0304713919cff9c7eb3b410a2e4 beginner_tutorials/CMakeFiles/beginner_tutorial
 c574d0304713919cff9c7eb3b410a2e4 beginner_tutorials/CMakeFiles/beginner_tutorials_generate_messages_lisp
 c574d0304713919cff9c7eb3b410a2e4 beginner_tutorials/CMakeFiles/beginner_tutorials_generate_messages_nodejs
 c574d0304713919cff9c7eb3b410a2e4 beginner_tutorials/CMakeFiles/beginner_tutorials_generate_messages_py
+1d3a99645427242abb864e3b8912507b keyboard_reader/CMakeFiles/_keyboard_reader_generate_messages_check_deps_Key
+a54f76d07f354f2038a4eac1cc0c4685 keyboard_reader/CMakeFiles/keyboard_reader_generate_messages_cpp
+a54f76d07f354f2038a4eac1cc0c4685 keyboard_reader/CMakeFiles/keyboard_reader_generate_messages_eus
+a54f76d07f354f2038a4eac1cc0c4685 keyboard_reader/CMakeFiles/keyboard_reader_generate_messages_lisp
+a54f76d07f354f2038a4eac1cc0c4685 keyboard_reader/CMakeFiles/keyboard_reader_generate_messages_nodejs
+a54f76d07f354f2038a4eac1cc0c4685 keyboard_reader/CMakeFiles/keyboard_reader_generate_messages_py
