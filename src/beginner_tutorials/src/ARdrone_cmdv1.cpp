@@ -87,13 +87,15 @@ void KeybordEvent(char buff, ros::Publisher& pubTakeoff, ros::Publisher& pubLand
     {
         ROS_INFO("sending command [%d]", buff);
         switch(buff)
-               {case 116: if(navdata.state==2) pubTakeoff.publish(takeoff_);
-                     ROS_INFO("TAKE_OFF");
+               {case 116: if(navdata.state==2){
+                pubTakeoff.publish(takeoff_);
+                ROS_INFO("TAKE_OFF");
+                     }
                      break;
                 case 32: pubLand.publish(landing_);
                      ROS_INFO("LANDING");
                      break;
-                case 82: pubReset.publish(reset_);
+                case 114: pubReset.publish(reset_);
 
               }
 

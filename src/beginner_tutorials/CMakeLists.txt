@@ -215,6 +215,7 @@ add_executable(ARdrone_cmdv1 src/ARdrone_cmdv1.cpp)
 target_link_libraries(ARdrone_cmdv1 ${catkin_LIBRARIES})
 add_dependencies(ARdrone_cmdv1 beginner_tutorials_generate_messages_cpp)
 
-add_executable(keybord_input_test src/keyboard_input.cpp)
-target_link_libraries(keybord_input_test ${catkin_LIBRARIES})
-add_dependencies(keybord_input_test beginner_tutorials_generate_messages_cpp)
+add_executable(ARdronePID src/ARdronePID.cpp)
+target_link_libraries(ARdronePID ${catkin_LIBRARIES})
+add_dependencies(ARdronePID beginner_tutorials_generate_messages_cpp)
+
