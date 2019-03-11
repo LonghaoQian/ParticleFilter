@@ -12,7 +12,7 @@ using namespace std;
 //#include <QKeyEvent>  will fix the later
 # define M_PI       3.14159265358979323846  /* pi */
 # define windowsize 4
-# define windowsize_ARdrone 6
+# define windowsize_ARdrone 10
 //
 int keyboard_input;
 
@@ -158,6 +158,9 @@ public:
     double GetYawRate();
     double GetRawYawRate();
     void RosWhileLoopRun();// based on external command
+    double AngularError(double reference, double state);
+    double Rad2Deg(double rad);
+    double Deg2Rad(double rad);
     /*
      * com = -1 0 1 2 3 4
     */
@@ -291,7 +294,7 @@ void ARDroneCommand::MovingWindowAveraging()
     double velocitytemp;
     velocitytemp = weight*yaw_rate_raw[0];
 
-    for(int i = 1;i<windowsize;i++)// sum starts from the second buffer value
+    for(int i = 1;i<windowsize_ARdrone;i++)// sum starts from the second buffer value
     {
         velocitytemp += weight*yaw_rate_raw[i];
     }
@@ -303,7 +306,10 @@ void ARDroneCommand::CalculateYawRateFromYawAngle()
 {
     PushYawAngle();
     double yaw_rate_onestep;
-    yaw_rate_onestep = (yaw_angle[1]-yaw_angle[0])/delta_T;
+
+
+
+    yaw_rate_onestep = Rad2Deg(AngularError(Deg2Rad(yaw_angle[1]), Deg2Rad(yaw_angle[0])))/delta_T;
     PushRawYawRate(yaw_rate_onestep);
     MovingWindowAveraging();
 }
@@ -314,6 +320,39 @@ double  ARDroneCommand::GetYawRate()
 double  ARDroneCommand::GetRawYawRate()
 {
     return yaw_rate_raw[windowsize_ARdrone-1];
+}
+
+double ARDroneCommand::AngularError(double reference, double state)
+{
+    // only accepts rad
+    double cr,sr;
+    double cs,ss;
+    cr = cos(reference);
+    sr = sin(reference);
+    cs = cos(state);
+    ss = sin(state);
+    // const
+    double xr[2];
+    xr[0] = cr;
+    xr[1] = sr;
+    double x[2];
+    x[0] = cs;
+    x[1] = ss;
+    double y[2];
+    y[0] = -ss;
+    y[1] = cs;
+    double xrs[2];// calculate the reference vector in the rotated coordinate
+    xrs[0] = xr[0]*x[0]+xr[1]*x[1];
+    xrs[1] = xr[0]*y[0]+xr[1]*y[1];
+    return atan2(xrs[1],xrs[0]);
+}
+double  ARDroneCommand::Rad2Deg(double rad)
+{
+    return 180/M_PI*rad;
+}
+double  ARDroneCommand::Deg2Rad(double deg)
+{
+    return deg/180*M_PI;
 }
 void ARDroneCommand::ReceiveNavdata(const ardrone_autonomy::Navdata& Navmsg)
 {
@@ -889,13 +928,14 @@ int main(int argc, char **argv)
     comchannel_1.Initialize(n,Control_Rate);
     // PID control
     Incremental_PID yaw_rate_pid;
-    yaw_rate_pid.Initialize(Control_Rate,3.9,0,26,0.9,-0.9);
+    //yaw_rate_pid.Initialize(Control_Rate,3.9/100,0,26/100,0.9,-0.9);
+    yaw_rate_pid.Initialize(Control_Rate,3.9/3,0,2,1,-1);
     // Initialize Data Recorder
     DataRecorder psi_recorder;
     DataRecorder velocity_recorder;
-    psi_recorder.Initialize("psi_data.txt",2,Control_Rate);
+    psi_recorder.Initialize("psi_data.txt",5,Control_Rate);
     velocity_recorder.Initialize("vz_data.txt",3,Control_Rate);
-    double data[2];
+    double data[5];
     double data2[3];
     double yaw_rate_error;
 // Set Ros Excution Rate
@@ -918,6 +958,7 @@ int main(int argc, char **argv)
 
       // send commands
       comchannel_1.VelocityCommandUpdate(0,0,0,yaw_rate_pid.GetPIDOutPut());
+      data[1] = yaw_rate_pid.GetPIDOutPut();
       comchannel_1.RosWhileLoopRun();// flush the commands and calculations
 
       //ROS_INFO("Signal is [%f]", SignalOutput);
@@ -925,14 +966,17 @@ int main(int argc, char **argv)
       OpTiFeedback.RosWhileLoopRun();
       // Yaw control loop:
       yaw_rate_error = SignalOutput*100 - comchannel_1.GetYawRate();//error
-      yaw_rate_pid.RosWhileLoopRun(yaw_rate_error);// push error into pid
+      yaw_rate_pid.RosWhileLoopRun(yaw_rate_error/100);// push error into pid
       //save data
       if(sig_1.GetSignalStatus()==0)
       {
           psi_recorder.StopRecording();
       }
       data[0] = SignalOutput;
-      data[1] = comchannel_1.GetYawRate();
+
+      data[2] = comchannel_1.GetYawRate();
+      data[3] = comchannel_1.GetRawYawRate();
+      data[4] = comchannel_1.GetDroneYaw();
       psi_recorder.RecorderUpdate(data);
 
       // z changle loop:
