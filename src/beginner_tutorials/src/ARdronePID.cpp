@@ -12,6 +12,7 @@ using namespace std;
 //#include <QKeyEvent>  will fix the later
 # define M_PI       3.14159265358979323846  /* pi */
 # define windowsize 4
+# define windowsize_ARdrone 6
 //
 int keyboard_input;
 
@@ -35,6 +36,7 @@ struct opitrack_pose{
     double q3;
     double t;
 };
+
 
 ////////////////////// Signal Generator ////////////////////////////
 class SignalGenerator{
@@ -134,8 +136,17 @@ class ARDroneCommand{
     // Nav Messages
     static ardrone_autonomy::Navdata navdata;
     static void ReceiveNavdata(const ardrone_autonomy::Navdata& Navmsg);
+    // Variables and Functions for yaw rate calculation
+    double delta_T;
+    double yaw_angle[2];
+    double yaw_rate_raw[windowsize_ARdrone];
+    double yaw_rate_filtered;
+    void CalculateYawRateFromYawAngle();// calculate velocity info from pose update measurements
+    void MovingWindowAveraging();// a filter using moving window
+    void PushRawYawRate(double& newyawrate);// push newly measured velocity into raw velocity buffer
+    void PushYawAngle();//push newly measured pose into dronepose buffer
 public:
-    void Initialize(ros::NodeHandle& n);
+    void Initialize(ros::NodeHandle& n,double Controlrate);
     // Basic Command Functions
     void TakeOFF();
     void Land();
@@ -144,14 +155,16 @@ public:
     void Stop();
     void GetDroneState();//Get drone flying state
     double GetDroneYaw();
-    int ExternalCommand(int com);// based on external command
+    double GetYawRate();
+    double GetRawYawRate();
+    void RosWhileLoopRun();// based on external command
     /*
      * com = -1 0 1 2 3 4
     */
 
 };
 
-void ARDroneCommand::Initialize(ros::NodeHandle& n)
+void ARDroneCommand::Initialize(ros::NodeHandle& n,double Controlrate)
 {
     //Advertise Publisher
     pubTakeoff   = n.advertise<std_msgs::Empty>("ardrone/takeoff", 1);
@@ -160,6 +173,14 @@ void ARDroneCommand::Initialize(ros::NodeHandle& n)
     pubMove      = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
     subNavdata   = n.subscribe("ardrone/navdata", 1, this->ReceiveNavdata);
     State = 0;
+    for(int i=0;i<windowsize_ARdrone;i++)
+    {
+        yaw_rate_raw[i] = 0;
+    }
+    yaw_angle[0] = 0;
+    yaw_angle[1] = 0;
+    yaw_rate_filtered = 0;
+    delta_T = 1/Controlrate;
 }
 void ARDroneCommand::Land()
 {
@@ -179,7 +200,6 @@ void  ARDroneCommand::VelocityCommandUpdate(double vx,double vy,double vz,double
     command_.linear.y = vy;
     command_.linear.z = vz;
     command_.angular.z = az;
-    pubMove.publish(command_);
 }
 void ARDroneCommand::Stop()
 {
@@ -187,7 +207,6 @@ void ARDroneCommand::Stop()
     command_.linear.y = 0;
     command_.linear.z = 0;
     command_.angular.z = 0;
-    pubMove.publish(command_);
 }
 void ARDroneCommand::GetDroneState()
 {
@@ -229,18 +248,13 @@ void ARDroneCommand::GetDroneState()
     }
     ROS_INFO("Battery precent is: [%f]",navdata.batteryPercent);
 }
-int ARDroneCommand::ExternalCommand(int com)
+void ARDroneCommand::RosWhileLoopRun()
 {
+    //Do the velocity calculation
+    CalculateYawRateFromYawAngle();
+    // push moving command to drone
+    pubMove.publish(command_);
 
-    switch(com)
-    {
-    case -1:
-        break;
-    case 0:
-        break;
-
-    }
-    return 0;
 }
 
 double ARDroneCommand::GetDroneYaw()
@@ -248,6 +262,59 @@ double ARDroneCommand::GetDroneYaw()
     return navdata.rotZ; // return yaw angle in magnetometer
 }
 
+
+void ARDroneCommand::PushYawAngle()
+{
+    yaw_angle[0] = yaw_angle[1];
+    yaw_angle[1] = navdata.rotZ;
+}
+void ARDroneCommand::PushRawYawRate(double &newyawrate)
+{
+    /* Logic:
+     * a(i-1) = a(i), i = 2...windowsize
+     * should fristly start from  i = 2. a(1) = a(2); a(2) = a(3);....; a(N-1) = a(N)
+     * secondly a(N) = a_new
+    */
+    for(int i = 1;i<windowsize_ARdrone;i++)//first step
+    {
+        yaw_rate_raw[i-1] = yaw_rate_raw[i];
+    }
+    yaw_rate_raw[windowsize_ARdrone-1] = newyawrate;// second step update the last variable in the velocity buffer
+}
+
+void ARDroneCommand::MovingWindowAveraging()
+{
+    /* Logic: Average the raw velocity measurement in the
+    */
+    double weight = (double)1/windowsize_ARdrone;// the weight on each velocity to be summed up.
+    // create a temporary variable to store the summed velocity and initialize it witht the 1st buffer value
+    double velocitytemp;
+    velocitytemp = weight*yaw_rate_raw[0];
+
+    for(int i = 1;i<windowsize;i++)// sum starts from the second buffer value
+    {
+        velocitytemp += weight*yaw_rate_raw[i];
+    }
+    // the filtered vlocity is just the weighted summed result
+    yaw_rate_filtered = velocitytemp;
+}
+
+void ARDroneCommand::CalculateYawRateFromYawAngle()
+{
+    PushYawAngle();
+    double yaw_rate_onestep;
+    yaw_rate_onestep = (yaw_angle[1]-yaw_angle[0])/delta_T;
+    PushRawYawRate(yaw_rate_onestep);
+    MovingWindowAveraging();
+}
+double  ARDroneCommand::GetYawRate()
+{
+    return yaw_rate_filtered;
+}
+double  ARDroneCommand::GetRawYawRate()
+{
+    return yaw_rate_raw[windowsize_ARdrone-1];
+}
 void ARDroneCommand::ReceiveNavdata(const ardrone_autonomy::Navdata& Navmsg)
 {
         navdata = Navmsg; // update navdata
@@ -489,20 +556,25 @@ class Incremental_PID{
     double kd;
     double upperlimit;
     double lowerlimit;
-    double u;// output
+    double u_k;// output u(k)
     double e_k;//e(k)
     double e_k_1;//e(k-1)
     double e_k_2;//e(k-2)
-    void PID_update();// control output update
+    void PID_update(double e);// control output update
     unsigned int pid_flag;//  flag 0: stop  1: running 2; fault
 public:
     void Initialize(double controlrate, double kp, double kd, double ki, double upperlimit, double lowerlimit);//
     void Start();//start the controller
     void Stop(); //stop the controller
     void Reset(); //reset the contoller
-    void GetOutPut();
-    void GetPIDState();
-    void RosWhileLoopRun();// in ros while loop update the controller
+    unsigned int GetPIDState();
+    void RosWhileLoopRun(double e);// in ros while loop update the controller e is the PID input and u is the output
+    double GetPIDOutPut();
+    // some utility tools to help calculate errors
+    double LinearError(double reference, double state);
+    double AngularError(double reference, double state);// only accepts rad
+    double Rad2Deg(double rad);
+    double Deg2Rad(double deg);
 
 };
 void Incremental_PID::Initialize(double controlrate, double kp_, double kd_, double ki_, double upperlimit_, double lowerlimit_)
@@ -515,7 +587,7 @@ void Incremental_PID::Initialize(double controlrate, double kp_, double kd_, dou
     upperlimit = upperlimit_;
     lowerlimit = lowerlimit_;
     //
-    u = 0;
+    u_k = 0;
     e_k = 0;
     e_k_1 = 0;
     e_k_2 = 0;
@@ -530,13 +602,99 @@ void Incremental_PID::Stop()
 }
 void Incremental_PID::Reset()
 {
+    pid_flag = 0;
+    u_k = 0;
+    e_k = 0;
+    e_k_1 = 0;
+    e_k_2 = 0;
+}
+void Incremental_PID::PID_update(double e)
+{
+    // update errors
+    e_k_2 = e_k_1;
+    e_k_1 = e_k;
+    e_k = e;
+    // calculate current output
+    double delta_u;// calculate output increment
+    delta_u = kp*(e_k-e_k_1)+ki*e_k+kd*(e_k-2*e_k_1+e_k_2);
+    u_k += delta_u;
+    // determine whether the PID has reached a preset bound
+    if(u_k-upperlimit>0)
+    {
+        u_k = upperlimit;// limit the magnitude
+        pid_flag = 2;
+    }
+    if(lowerlimit-u_k>0)
+    {
+        u_k = lowerlimit;// limit the magnitude
+        pid_flag = 2;
+    }
 
 }
-void Incremental_PID::RosWhileLoopRun()
+void Incremental_PID::RosWhileLoopRun(double e)
 {
-    if(pid_flag==1)
-    {}else{}
+
+    switch(pid_flag)
+    {
+    case 0:
+        break; // if stopped, then do nothing
+    case 1: {
+        // if all normal run update
+                PID_update(e);
+    }
+        break;
+    case 2: {
+        PID_update(e);// still do update
+    }
+        break;
+
+    }
 }
+unsigned int Incremental_PID::GetPIDState()
+{
+    return pid_flag;// return flag as state
+}
+double Incremental_PID::LinearError(double reference, double state)
+{
+    return reference-state;
+}
+double Incremental_PID::AngularError(double reference, double state)
+{
+    // only accepts rad
+    double cr,sr;
+    double cs,ss;
+    cr = cos(reference);
+    sr = sin(reference);
+    cs = cos(state);
+    ss = sin(state);
+    // const
+    double xr[2];
+    xr[0] = cr;
+    xr[1] = sr;
+    double x[2];
+    x[0] = cs;
+    x[1] = ss;
+    double y[2];
+    y[0] = -ss;
+    y[1] = cs;
+    double xrs[2];// calculate the reference vector in the rotated coordinate
+    xrs[0] = xr[0]*x[0]+xr[1]*x[1];
+    xrs[1] = xr[0]*y[0]+xr[1]*y[1];
+    return atan2(xrs[1],xrs[0]);
+}
+double Incremental_PID::Rad2Deg(double rad)
+{
+    return 180/M_PI*rad;
+}
+double Incremental_PID::Deg2Rad(double deg)
+{
+    return deg/180*M_PI;
+}
+double Incremental_PID::GetPIDOutPut()
+{
+    return u_k;
+}
+
 ///////////////////////////// Keyboard Command ///////////////////////////////
 //Get Keyboard Input
 char getch()
@@ -640,7 +798,7 @@ void DataRecorder::StopRecording()
     file.close();
 }
 
-void KeybordEvent(char buff,ARDroneCommand& comchannel, SignalGenerator& signal, DataRecorder& recorder,OptiTrackFeedback& optitrack)
+void KeybordEvent(char buff,ARDroneCommand& comchannel, SignalGenerator& signal, DataRecorder& recorder,OptiTrackFeedback& optitrack, Incremental_PID& yaw_rate_pid)
 {
     if(keyboard_input>-1)//if keyboard is
     {
@@ -667,6 +825,7 @@ void KeybordEvent(char buff,ARDroneCommand& comchannel, SignalGenerator& signal,
                      {
                         signal.Start();
                         recorder.StartRecording();
+                        yaw_rate_pid.Start();
                         ROS_INFO("Start Test");
                      }
                      break;
@@ -674,6 +833,8 @@ void KeybordEvent(char buff,ARDroneCommand& comchannel, SignalGenerator& signal,
                      {
                         signal.Stop();
                         recorder.StopRecording();
+                        yaw_rate_pid.Stop();
+                        yaw_rate_pid.Reset();
                         ROS_INFO("End Test");
                      }
                      break;
@@ -725,7 +886,10 @@ int main(int argc, char **argv)
     OpTiFeedback.Initialize(n);
   // ARDrone class
     ARDroneCommand comchannel_1;
-    comchannel_1.Initialize(n);
+    comchannel_1.Initialize(n,Control_Rate);
+    // PID control
+    Incremental_PID yaw_rate_pid;
+    yaw_rate_pid.Initialize(Control_Rate,3.9,0,26,0.9,-0.9);
     // Initialize Data Recorder
     DataRecorder psi_recorder;
     DataRecorder velocity_recorder;
@@ -733,10 +897,11 @@ int main(int argc, char **argv)
     velocity_recorder.Initialize("vz_data.txt",3,Control_Rate);
     double data[2];
     double data2[3];
+    double yaw_rate_error;
 // Set Ros Excution Rate
     ros::Rate loop_rate(Control_Rate);
     velocity_recorder.StartRecording();
-
+    //double yaw_ref = 70;
   while (ros::ok())
   {
       //////////////////////////////// Fix this part with QT library later /////////////////////
@@ -744,26 +909,39 @@ int main(int argc, char **argv)
       int c = 0;
       c=getch();
       // perform keyboard command
-      KeybordEvent(c, comchannel_1, sig_1,psi_recorder,OpTiFeedback);
+      KeybordEvent(c, comchannel_1, sig_1,psi_recorder,OpTiFeedback,yaw_rate_pid);
       //////////////////////////////// Fix this part with QT library later /////////////////////
       SignalOutput = sig_1.RunTimeUpdate();
-      comchannel_1.VelocityCommandUpdate(0,0,0,SignalOutput);
+
+      // calculate errors
+      //yaw_rate_error = -0.05*yaw_rate_pid.AngularError(yaw_rate_pid.Deg2Rad(SignalOutput),yaw_rate_pid.Deg2Rad(comchannel_1.GetDroneYaw()));// poistion command
+
+      // send commands
+      comchannel_1.VelocityCommandUpdate(0,0,0,yaw_rate_pid.GetPIDOutPut());
+      comchannel_1.RosWhileLoopRun();// flush the commands and calculations
+
+      //ROS_INFO("Signal is [%f]", SignalOutput);
+      ros::spinOnce();// do the loop once
+      OpTiFeedback.RosWhileLoopRun();
+      // Yaw control loop:
+      yaw_rate_error = SignalOutput*100 - comchannel_1.GetYawRate();//error
+      yaw_rate_pid.RosWhileLoopRun(yaw_rate_error);// push error into pid
+      //save data
       if(sig_1.GetSignalStatus()==0)
       {
           psi_recorder.StopRecording();
       }
-      //ROS_INFO("Signal is [%f]", SignalOutput);
-      ros::spinOnce();// do the loop once
-      OpTiFeedback.RosWhileLoopRun();
-      //save data
       data[0] = SignalOutput;
-      data[1] = comchannel_1.GetDroneYaw();
+      data[1] = comchannel_1.GetYawRate();
       psi_recorder.RecorderUpdate(data);
 
-      //data2[0] = OpTiFeedback.GetPose().z;
-      //data2[1] = OpTiFeedback.GetRaWVelocity().vz;
-      //data2[2] = OpTiFeedback.GetVelocity().vz;
-      //velocity_recorder.RecorderUpdate(data2);
+      // z changle loop:
+
+
+      data2[0] = OpTiFeedback.GetPose().z;
+      data2[1] = OpTiFeedback.GetRaWVelocity().vz;
+      data2[2] = OpTiFeedback.GetVelocity().vz;
+      velocity_recorder.RecorderUpdate(data2);
       // loop wait
       loop_rate.sleep();
 
