@@ -262,7 +262,7 @@ void ARDroneCommand::RosWhileLoopRun()
 
 double ARDroneCommand::GetDroneYaw()
 {
-    return navdata.rotZ; // return yaw angle in magnetometer
+    return navdata.rotZ; // return yaw angle in magnetometer (mag change it to yaw_angle[1])
 }
 
 
@@ -657,18 +657,6 @@ void Incremental_PID::PID_update(double e)
     double delta_u;// calculate output increment
     delta_u = kp*(e_k-e_k_1)+ki*e_k+kd*(e_k-2*e_k_1+e_k_2);
     u_k += delta_u;
-    // determine whether the PID has reached a preset bound
-    if(u_k-upperlimit>0)
-    {
-        u_k = upperlimit;// limit the magnitude
-        pid_flag = 2;
-    }
-    if(lowerlimit-u_k>0)
-    {
-        u_k = lowerlimit;// limit the magnitude
-        pid_flag = 2;
-    }
-
 }
 void Incremental_PID::RosWhileLoopRun(double e)
 {
@@ -731,7 +719,21 @@ double Incremental_PID::Deg2Rad(double deg)
 }
 double Incremental_PID::GetPIDOutPut()
 {
-    return u_k;
+
+    double u= u_k;
+    // determine whether the PID has reached a preset bound
+    if(u_k-upperlimit>0)
+    {
+        u = upperlimit;// limit the magnitude
+        pid_flag = 2;
+    }
+    if(lowerlimit-u_k>0)
+    {
+        u = lowerlimit;// limit the magnitude
+        pid_flag = 2;
+    }
+
+    return u;
 }
 
 ///////////////////////////// Keyboard Command ///////////////////////////////
@@ -912,7 +914,7 @@ int main(int argc, char **argv)
     Initialization();
     double Control_Rate = 40;// Hz the rate
     double SquareWaveTime = 20;// Time for the signal generator
-    double SquareWaveAmplitude = 0.3;//m/s amplitude for square waves
+    double SquareWaveAmplitude = 0.5;//m/s amplitude for square waves
     double SquareWaveFrequency = 0.25;//Frequency of the square wave
     double SampleNumber  = Control_Rate *SquareWaveTime;
     double SignalOutput = 0;
@@ -929,15 +931,16 @@ int main(int argc, char **argv)
     // PID control
     Incremental_PID yaw_rate_pid;
     //yaw_rate_pid.Initialize(Control_Rate,3.9/100,0,26/100,0.9,-0.9);
-    yaw_rate_pid.Initialize(Control_Rate,3.9/3,0,2,1,-1);
+    //yaw_rate_pid.Initialize(Control_Rate,1.1,0,3.6,1,-1);
+    yaw_rate_pid.Initialize(Control_Rate,1.44,0,6,1,-1);
     // Initialize Data Recorder
     DataRecorder psi_recorder;
     DataRecorder velocity_recorder;
-    psi_recorder.Initialize("psi_data.txt",5,Control_Rate);
+    psi_recorder.Initialize("psi_data.txt",6,Control_Rate);
     velocity_recorder.Initialize("vz_data.txt",3,Control_Rate);
-    double data[5];
+    double data[6];
     double data2[3];
-    double yaw_rate_error;
+    double yaw_error;
 // Set Ros Excution Rate
     ros::Rate loop_rate(Control_Rate);
     velocity_recorder.StartRecording();
@@ -965,8 +968,10 @@ int main(int argc, char **argv)
       ros::spinOnce();// do the loop once
       OpTiFeedback.RosWhileLoopRun();
       // Yaw control loop:
-      yaw_rate_error = SignalOutput*100 - comchannel_1.GetYawRate();//error
-      yaw_rate_pid.RosWhileLoopRun(yaw_rate_error/100);// push error into pid
+      yaw_error = SignalOutput*100 - comchannel_1.GetYawRate();//error
+
+      //yaw_error = comchannel_1.Rad2Deg(comchannel_1.AngularError(comchannel_1.Deg2Rad(SignalOutput*100),comchannel_1.Deg2Rad(comchannel_1.GetDroneYaw())));
+      yaw_rate_pid.RosWhileLoopRun(yaw_error/100);// push error into pid
       //save data
       if(sig_1.GetSignalStatus()==0)
       {
@@ -977,10 +982,10 @@ int main(int argc, char **argv)
       data[2] = comchannel_1.GetYawRate();
       data[3] = comchannel_1.GetRawYawRate();
       data[4] = comchannel_1.GetDroneYaw();
+      data[5] = yaw_error;
       psi_recorder.RecorderUpdate(data);
 
       // z changle loop:
-
 
       data2[0] = OpTiFeedback.GetPose().z;
       data2[1] = OpTiFeedback.GetRaWVelocity().vz;
