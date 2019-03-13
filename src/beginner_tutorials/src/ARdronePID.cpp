@@ -1029,7 +1029,7 @@ int main(int argc, char **argv)
     //yaw_rate_pid.Initialize(Control_Rate,3.9/100,0,26/100,0.9,-0.9);
     //yaw_rate_pid.Initialize(Control_Rate,1,0,1,1,-1);
     yaw_rate_pid.Initialize(Control_Rate,5,0,0,1,-1);// kp = 5 1
-    vertical_speed_pid.Initialize(Control_Rate,2,0.2,3,1,-1);
+    vertical_speed_pid.Initialize(Control_Rate,2,0,0.2,1,-1);
     horizontal_x_pid.Initialize(Control_Rate,0.25,0,0,1,-1);
     horizontal_z_pid.Initialize(Control_Rate,0.25,0,0,1,-1);
     // Initialize Data Recorder
@@ -1039,16 +1039,16 @@ int main(int argc, char **argv)
     velocity_recorder.Initialize("vz_data.txt",4,Control_Rate);
     double data[6];
     double dataz[4];
-    double yaw_angle_cmd = -100;
+    double yaw_angle_cmd = 0;
     double yaw_error;
     double vz_error;
-    double command_valtitue = 1;
+    double command_altitue = 1;
     double command_x = 0;
     double command_z = 0;
     double z_error = 0;
     double euler_optitrack[3];
-    double ke = 1;
-    double k = 1;
+    double ke = 2;
+    double k = 0.5;
     double s_x_w = 0;
     double s_y_w = 0;
     double s_x_b = 0;
@@ -1079,14 +1079,16 @@ int main(int argc, char **argv)
       OpTiFeedback.RosWhileLoopRun();
       // Yaw control loop:
       //yaw_error = SignalOutput*100 - comchannel_1.GetYawRate();// rate control
-      yaw_error = comchannel_1.Rad2Deg(comchannel_1.AngularError(comchannel_1.Deg2Rad(yaw_angle_cmd),comchannel_1.Deg2Rad(comchannel_1.GetDroneYaw())));// angle control
+      //yaw_error = comchannel_1.Rad2Deg(comchannel_1.AngularError(comchannel_1.Deg2Rad(yaw_angle_cmd),comchannel_1.Deg2Rad(comchannel_1.GetDroneYaw())));// angle control
+      yaw_error = comchannel_1.Rad2Deg(comchannel_1.AngularError(comchannel_1.Deg2Rad(yaw_angle_cmd),euler_optitrack[2]));// angle from optitrack
       yaw_rate_pid.RosWhileLoopRun(yaw_error/100);// push error into pid
       // Altitude Control Loop
-      //vz_error = SignalOutput - OpTiFeedback.GetVelocity().vy;
-      z_error =  OpTiFeedback.GetPose().y - command_valtitue;
-      //vz_error = z_error + OpTiFeedback.GetVelocity().vy;
-      //vz_error = OpTiFeedback.GetVelocity().vy - SignalOutput;
-      vertical_speed_pid.RosWhileLoopRun(-2*vz_error);
+//      vz_error = SignalOutput - OpTiFeedback.GetVelocity().vy;
+//      vertical_speed_pid.RosWhileLoopRun(vz_error);
+
+      z_error =  OpTiFeedback.GetPose().y - command_altitue;
+      vertical_speed_pid.RosWhileLoopRun(-2*z_error-0.5*OpTiFeedback.GetVelocity().vy);// use s.
+
       //save data
       if(sig_1.GetSignalStatus()==0)
       {
@@ -1100,7 +1102,7 @@ int main(int argc, char **argv)
       data[5] = yaw_error;
       psi_recorder.RecorderUpdate(data);
 
-      // z changle loop:
+      // z loop:
       if(sig_1.GetSignalStatus()==0)
       {
           velocity_recorder.StopRecording();
@@ -1118,9 +1120,8 @@ int main(int argc, char **argv)
       // Transfer velocity and poisiton
       s_x_b = s_x_w*cos(-euler_optitrack[2])+s_y_w*sin(-euler_optitrack[2]);
       s_y_b = -s_x_w*sin(-euler_optitrack[2])+s_y_w*cos(-euler_optitrack[2]);
-      horizontal_x_pid.RosWhileLoopRun(-s_x_b);
-      horizontal_z_pid.RosWhileLoopRun(-s_y_b);
-      //ROS_INFO("y measurement is [%f]", OpTiFeedback.GetPose().y);
+      horizontal_x_pid.RosWhileLoopRun(-k*s_x_b);
+      horizontal_z_pid.RosWhileLoopRun(-k*s_y_b);
       //ROS_INFO("yaw angle is [%f] x position error is [%f] z position error is [%f]",euler_optitrack[2]*57.3,s_x_b,s_y_b);
       // loop wait
       loop_rate.sleep();
