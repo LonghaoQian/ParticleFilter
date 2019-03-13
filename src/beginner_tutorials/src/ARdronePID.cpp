@@ -800,6 +800,11 @@ double Incremental_PID::GetPIDOutPut()
 
     return u;
 }
+////////////////////////////// ARdrone Flight Control /////////////////
+
+
+
+
 
 ///////////////////////////// Keyboard Command ///////////////////////////////
 //Get Keyboard Input
@@ -1001,8 +1006,8 @@ int main(int argc, char **argv)
     SignalGenerator vertial_signal;
     double Control_Rate = 40;// Hz the rate
     double SquareWaveTime = 40;// Time for the signal generator
-    double SquareWaveAmplitude = 0.2;//m/s amplitude for square waves
-    double SquareWaveFrequency = 0.1;//Frequency of the square wave
+    double SquareWaveAmplitude = 0.3;//m/s amplitude for square waves
+    double SquareWaveFrequency = 0.25;//Frequency of the square wave
     double SampleNumber  = Control_Rate *SquareWaveTime;
     double SignalOutput = 0;
     sig_1.Initialize(SquareWaveTime,SquareWaveAmplitude,SquareWaveFrequency,Control_Rate);
@@ -1023,8 +1028,8 @@ int main(int argc, char **argv)
     Incremental_PID horizontal_z_pid;
     //yaw_rate_pid.Initialize(Control_Rate,3.9/100,0,26/100,0.9,-0.9);
     //yaw_rate_pid.Initialize(Control_Rate,1,0,1,1,-1);
-    yaw_rate_pid.Initialize(Control_Rate,5,0,0,1,-1);
-    vertical_speed_pid.Initialize(Control_Rate,4,0,0.2,1,-1);
+    yaw_rate_pid.Initialize(Control_Rate,5,0,0,1,-1);// kp = 5 1
+    vertical_speed_pid.Initialize(Control_Rate,2,0.2,3,1,-1);
     horizontal_x_pid.Initialize(Control_Rate,0.25,0,0,1,-1);
     horizontal_z_pid.Initialize(Control_Rate,0.25,0,0,1,-1);
     // Initialize Data Recorder
@@ -1079,8 +1084,9 @@ int main(int argc, char **argv)
       // Altitude Control Loop
       //vz_error = SignalOutput - OpTiFeedback.GetVelocity().vy;
       z_error =  OpTiFeedback.GetPose().y - command_valtitue;
-      vz_error = z_error + OpTiFeedback.GetVelocity().vy;
-      vertical_speed_pid.RosWhileLoopRun(-vz_error);
+      //vz_error = z_error + OpTiFeedback.GetVelocity().vy;
+      //vz_error = OpTiFeedback.GetVelocity().vy - SignalOutput;
+      vertical_speed_pid.RosWhileLoopRun(-2*vz_error);
       //save data
       if(sig_1.GetSignalStatus()==0)
       {
