@@ -1,8 +1,0 @@
-prefix=/home/longhao/catkin_ws/install
-
-Name: keyboard_reader
-Description: Description of keyboard_reader
-Version: 0.0.0
-Cflags: -I/home/longhao/catkin_ws/install/include
-Libs: -L/home/longhao/catkin_ws/install/lib 
-Requires: 
