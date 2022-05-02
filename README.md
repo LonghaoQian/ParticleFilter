@@ -16,9 +16,19 @@
 </div>
 
 ## System model:
+### System kinematics:
 
+<p align="center">
+  <img width="1141" height="210" src="https://github.com/LonghaoQian/ParticleFilter/blob/master/figureoutput/system_model.PNG">
+</p>
 
+<p align="center">
+  <img width="982" height="139" src="https://github.com/LonghaoQian/ParticleFilter/blob/master/figureoutput/Qk.PNG">
+</p>
 
+<p align="center">
+  <img width="903" height="148" src="https://github.com/LonghaoQian/ParticleFilter/blob/master/figureoutput/Rk.PNG">
+</p>
 
 ## Dataset:
 - `dataset/dataset2.mat`: robot odometry and lidar measurements.
