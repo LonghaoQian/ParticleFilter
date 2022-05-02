@@ -7,6 +7,14 @@
   Figure 1 Robot estimated position and particle position
 </div>
 
+<p align="center" width="100%">
+    <img width="49%" src="https://github.com/LonghaoQian/ParticleFilter/blob/master/figureoutput/xyresult.png"> 
+    <img width="49%" src="https://github.com/LonghaoQian/ParticleFilter/blob/master/figureoutput/number%20of%20particles.png"> 
+</p>
+<div align="center">
+  Figure 2 Robot true and estimated trajectory (right), Number of particles and visible landmarks (left) 
+</div>
+
 ## System model
 
 ## Dataset
