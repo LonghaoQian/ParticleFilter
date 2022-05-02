@@ -1,7 +1,7 @@
 %% using the particle filter
 clear
 close all
-load dataset2.mat
+load('dataset/dataset2.mat')
 %% set robot parameters
 robot.system.numOfStates = 3;
 robot.system.control.input = [v om];% assemble input.
@@ -10,7 +10,7 @@ robot.system.time = t;
 robot.system.sensors.maxRange = 2;
 robot.system.sensors.R = diag([r_var b_var]);
 robot.system.sensors.samplePeriod = 0.1; % sample time 0.1s
-robot.system.sensorsNumberOfMeasurements = max(size(x_true));
+robot.system.sensors.NumberOfMeasurements = max(size(x_true));
 robot.system.sensors.range = r;
 robot.system.sensors.bearing = b;
 robot.system.sensors.landmarks = l;
@@ -19,6 +19,9 @@ robot.system.sensors.offset = d;
 robot.system.groundTruth.x = x_true;
 robot.system.groundTruth.y = y_true;
 robot.system.groundTruth.theta = th_true;
+
+robot.system.sensors.visibleLandMarks = ...
+    zeros(17, robot.system.sensors.NumberOfMeasurements);
 
 [robto.sampleSize, ~] = size(x_true);
 %% initialize amcl
@@ -105,18 +108,18 @@ for k = 1 : filter.settings.Ncurrent
 end
 drawnow;
 %% run the estimator
-N_end = 2900;
+N_end = 3300;
+robot.N_end = N_end;
 for i = 2 : N_end
     %% determine how many land marks are seem
-    LandmarkIndex = zeros(17, 1);% vector that contains visible landmarks
     for j = 1 : 17
         if robot.system.sensors.range(i, j) == 0
         elseif robot.system.sensors.range(i, j) > robot.system.sensors.maxRange
         else
             filter.estimation.numberOfLandmarks(i) = filter.estimation.numberOfLandmarks(i) + 1;
-            LandmarkIndex(filter.estimation.numberOfLandmarks(i)) = j; % assign corresponding landmarks index to array
+            robot.system.sensors.visibleLandMarks(filter.estimation.numberOfLandmarks(i), i) = j; % assign corresponding landmarks index to array
         end
-    end
+    end    
     if filter.estimation.numberOfLandmarks(i) ~= 0
         % if there are visible landmarks, run the AMCL
         % need to dynamically generate samples and bins
@@ -131,8 +134,8 @@ for i = 2 : N_end
         yk = zeros(2 * filter.estimation.numberOfLandmarks(i), 1);
         for k = 1 : filter.estimation.numberOfLandmarks(i) 
             % assemble observation matrix by number of landmarks seen
-            yk(2*k-1) = robot.system.sensors.range(i, LandmarkIndex(k));
-            yk(2*k)   = robot.system.sensors.bearing(i, LandmarkIndex(k));
+            yk(2*k-1) = robot.system.sensors.range(i, robot.system.sensors.visibleLandMarks(k, i));
+            yk(2*k)   = robot.system.sensors.bearing(i, robot.system.sensors.visibleLandMarks(k, i));
         end
         filter.estimation.weights{i} = [];
         filter.estimation.particles{i} = [];
@@ -160,7 +163,7 @@ for i = 2 : N_end
                                                      yk, 15* robot.system.sensors.R,...
                                                      filter.estimation.numberOfLandmarks(i),...
                                                      robot.system.sensors.landmarks,...
-                                                     LandmarkIndex, robot.system.sensors.offset); 
+                                                     robot.system.sensors.visibleLandMarks(:, i), robot.system.sensors.offset); 
             % Next, we convert the discrete distribution of all new samples into a histogram. We must check if the new
             % state (propagated_state) falls in a histogram bin with support or in an empty bin. We keep track of the
             % number of bins with support. Instead of adopting a (more efficient) tree, a simple list is used to
@@ -231,8 +234,8 @@ for i = 2 : N_end
     t1.String{2} = ['number of landmarks: ' num2str(filter.estimation.numberOfLandmarks(i))];
     for k = 1 : filter.estimation.numberOfLandmarks(i)        
         set(lidarIndicator{k},...
-            'XData', [robot.system.sensors.landmarks(LandmarkIndex(k), 1) robot.system.groundTruth.x(i)],...
-            'YData', [robot.system.sensors.landmarks(LandmarkIndex(k), 2) robot.system.groundTruth.y(i)],...
+            'XData', [robot.system.sensors.landmarks(robot.system.sensors.visibleLandMarks(k, i), 1) robot.system.groundTruth.x(i)],...
+            'YData', [robot.system.sensors.landmarks(robot.system.sensors.visibleLandMarks(k, i), 2) robot.system.groundTruth.y(i)],...
             'visible', 'on');
     end
     for k = filter.estimation.numberOfLandmarks(i) + 1 : di1
@@ -243,7 +246,7 @@ end
 %% save results
 name = 'AMCL';
 disp(['saving to ', name, '.mat'])
-save([name, '.mat'], 'robot', 'filter')
+save(['dataset/', name, '.mat'], 'robot', 'filter')
 %% plot figures
 figure
 hold on
