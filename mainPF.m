@@ -1,7 +1,8 @@
-%% using the particle filter
+%% robot trajectory estimation using particle filter
+% author: Longhao Qian
+% date: 2022 05 22
 clear
-close all
-load dataset2.mat
+load ('dataset/dataset2.mat')
 %% set covariance matrices
 Q = diag([v_var om_var]);
 R = diag([r_var b_var]);
@@ -12,7 +13,7 @@ x0_hat = x_true(1);
 P0_hat = diag([1 1 0.1]);
 N = max(size(x_true));
 N_landmarks = zeros(N,1);
-N_end = N;
+N_end = 3000;
 %% system model
 x_hat = zeros(N, 3); % estimated pose
 P_hat = zeros(3 * N, 3); % estimated covariance
@@ -127,7 +128,7 @@ for i = 2 : N_end
         % [xk, wk] = resample(xk, wk, resampling_strategy);
         %if you want to implement the bootstrap particle filter
         if Neff < Nt
-          disp('Resampling ...')
+          % disp('Resampling ...')
           [xk_temp,  weights(:, i)] = ResampleParticle(xk, weights(:, i), 'systematic_resampling');
           % {xk, wk} is an approximate discrete representation of p(x_k | y_{1:k})
           xk = xk_temp;
@@ -161,9 +162,10 @@ robotParticleFilter.groundTruth.th_true = th_true;
 robotParticleFilter.estimation.particles = particles;
 robotParticleFilter.estimation.x_hat = x_hat;
 robotParticleFilter.estimation.N = N_end;
-disp(['saving to ', name, '.mat'])
-save([name, '.mat'], 'robotParticleFilter')
+disp(['saving to dataset/', name, '.mat'])
+save(['dataset/', name, '.mat'], 'robotParticleFilter')
 %% plot figures
+close all
 figure
 hold on
 plot(x_true(1 : N_end), y_true(1 : N_end), 'LineWidth',1)
@@ -173,6 +175,7 @@ grid on
 axis equal
 xlabel('Position X/m')
 ylabel('Position Y/m')
+legend('ground truth', 'estimated position')
 figure
 hold on
 plot(t(1 : N_end), x_true(1 : N_end), 'LineWidth', 1)
@@ -180,6 +183,7 @@ plot(t(1 : N_end), x_hat(1 : N_end, 1), '-r', 'LineWidth',2)
 grid on
 xlabel('time, s')
 ylabel('X position, m')
+legend('ground truth', 'estimated position')
 figure
 hold on
 plot(t(1 : N_end), y_true(1 : N_end), 'LineWidth',1)
@@ -187,6 +191,7 @@ plot(t(1 : N_end), x_hat(1 : N_end, 2), '-r', 'LineWidth', 2)
 grid on
 xlabel('time, s')
 ylabel('Y position, m')
+legend('ground truth', 'estimated position')
 figure
 hold on
 plot(t(1 : N_end), th_true(1 : N_end), 'LineWidth', 1)
@@ -194,6 +199,17 @@ plot(t(1 : N_end), x_hat(1 : N_end, 3), '-r', 'LineWidth', 2)
 grid on
 xlabel('time, s')
 ylabel('theta, rad')
+legend('ground truth', 'estimated position')
+figure
+plot(t, N_landmarks)
+xlabel('t/s')
+ylabel('Number of Landmarks Seen')
+figure
+hist(N_landmarks, 0:1:12)
+xlabel('Number of Landmarks Seen')
+ylabel('Counting')
+grid on
+title('Number of visible landmarks')
 %% observation samples
 function p_yk_given_xk = GetObservationSample(xk, yk, R, numOfLandmarks, l, LandmarkIndex, d)
     ykSamples = zeros(2 * numOfLandmarks, 1);

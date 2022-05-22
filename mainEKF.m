@@ -1,8 +1,9 @@
-%
-clear all
-close all
-load dataset2.mat
-
+%% EKF for a robot moving around landmarks
+% Author: Longhao Qian
+% Data: 2022 05 22
+clear
+load('dataset/dataset2.mat')
+%%
 %%%%set covariance matrices
 Q=  diag([v_var om_var]);
 R = diag([r_var b_var]);
@@ -36,6 +37,7 @@ x_modify_arry = zeros(N,3);
 % Bearing = [Bearing(2:end,:);Bearing(end,:)];
 sigma3 = zeros(N,3);%3 sigma envelop
 sigma3(1,:) = 3*sqrt(diag(P_hat(1:3,:)));
+%%
 for i = 2:N
     %determine how many land marks are seem
     LandmarkIndex = zeros(17,1);% vector that contains visible landmarks
@@ -82,6 +84,8 @@ for i = 2:N
     X_HAT(i,3) = atan2(sin(X_HAT(i,3)),cos(X_HAT(i,3)));% convert angles into -pi-pi range
     sigma3(i,:) = 3*sqrt(diag(P_hat(3*i-2:3*i,:)));
 end
+%% plot
+close all
 figure
 hold on
 plot(x_true,y_true,'LineWidth',1)
@@ -89,20 +93,34 @@ plot(X_HAT(:,1),X_HAT(:,2),'-r','LineWidth',2)
 plot(l(:,1),l(:,2),'ok','LineWidth',3)
 grid on 
 axis equal
-xlabel('Position X/m')
-ylabel('Position Y/m')
+legend('ground truth', 'estimated position')
+xlabel('Position in X axis, m')
+ylabel('Position in Y axis, m')
+title('robot trajectory')
 figure
 hold on
 plot(t,x_true,'LineWidth',1)
 plot(t,X_HAT(:,1),'-r','LineWidth',2)
+grid on
+xlabel('t, s')
+ylabel('Position in X axis, m')
+legend('ground truth', 'estimated position')
 figure
 hold on
 plot(t,y_true,'LineWidth',1)
 plot(t,X_HAT(:,2),'-r','LineWidth',2)
+grid on
+xlabel('t, s')
+ylabel('Position in Y axis, m')
+legend('ground truth', 'estimated position')
 figure
 hold on
 plot(t,th_true,'LineWidth',1)
 plot(t,X_HAT(:,3),'-r','LineWidth',2)
+grid on
+xlabel('t, s')
+ylabel('Yaw angle, rad')
+legend('ground truth', 'estimated angle')
 figure
 plot(t,N_landmarks)
 xlabel('t/s')
@@ -111,6 +129,8 @@ figure
 hist(N_landmarks,0:1:12)
 xlabel('Number of Landmarks Seen')
 ylabel('Counting')
+grid on
+title('Number of visible landmarks')
 figure
 hold on
 plot(t,X_HAT(:,1)-x_true,'-b','LineWidth',1)
